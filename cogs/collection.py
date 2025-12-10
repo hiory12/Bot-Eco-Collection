@@ -6,7 +6,6 @@ from modules.game_classes import Item
 from modules.data_handler import DataManager
 
 # [Grading: Complexity] Full list with Images and Descriptions
-# Note: You can replace the URLs with any direct image link (ending in .png or .jpg)
 SHOP_ITEMS = [
     # --- COMMON (Grey/White) ---
     Item("Apple", 5, "Common", "A fresh red apple. Restores a bit of energy.", "https://emojigraph.org/media/twitter/red-apple_1f34e.png"),
@@ -24,7 +23,7 @@ SHOP_ITEMS = [
 
     # --- EPIC (Purple) ---
     Item("Grimoire", 800, "Epic", "Contains ancient forbidden spells.", "https://emojigraph.org/media/twitter/open-book_1f4d6.png"),
-    Item("Gold_Armor", 1500, "Epic", "Heavy, shiny, and very protective.", "https://emojigraph.org/media/twitter/bust-in-silhouette_1f464.png"), # Placeholder
+    Item("Gold_Armor", 1500, "Epic", "Heavy, shiny, and very protective.", "https://emojigraph.org/media/twitter/bust-in-silhouette_1f464.png"), 
     Item("Ruby_Ring", 2500, "Epic", "Grants the power of fire to the wearer.", "https://emojigraph.org/media/twitter/ring_1f48d.png"),
 
     # --- LEGENDARY (Gold) ---
@@ -60,7 +59,6 @@ class ShopSelect(Select):
         
         if player.buy(found_item):
             DataManager.save_player(player)
-            # Affichage avec image lors de l'achat !
             embed = discord.Embed(title="✅ Purchase Successful!", description=f"You obtained **{found_item.name}**!", color=discord.Color.green())
             embed.set_thumbnail(url=found_item.image_url)
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -78,35 +76,36 @@ class Collection(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # --- AUTOCOMPLETE FUNCTION ---
+    # C'est cette fonction qui permet de proposer les items quand on tape
+    async def item_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        return [
+            app_commands.Choice(name=item.name, value=item.name)
+            for item in SHOP_ITEMS
+            if current.lower() in item.name.lower()
+        ][:25] # Limite Discord de 25 choix
+
     @app_commands.command(name="shop", description="Open the interactive shop menu")
     async def shop(self, interaction: discord.Interaction):
         embed = discord.Embed(title="🛒 The Item Shop", description="Select an item below.", color=discord.Color.gold())
         await interaction.response.send_message(embed=embed, view=ShopView())
 
-    # --- LE NOUVEAU CATALOGUE (4 EMBEDS COULEURS) ---
     @app_commands.command(name="catalog", description="View items grouped by rarity with colors")
     async def catalog(self, interaction: discord.Interaction):
-        # On doit d'abord répondre pour ne pas faire timeout l'interaction
         await interaction.response.send_message("📜 **Loading Catalog...**", ephemeral=True)
 
-        # Configuration des catégories
         categories = [
-            {"name": "Common Items", "rarity": "Common", "color": 0x95a5a6}, # Gris
-            {"name": "Rare Items", "rarity": "Rare", "color": 0x3498db},   # Bleu
-            {"name": "Epic Items", "rarity": "Epic", "color": 0x9b59b6},   # Violet
-            {"name": "Legendary Items", "rarity": "Legendary", "color": 0xf1c40f} # Or
+            {"name": "Common Items", "rarity": "Common", "color": 0x95a5a6},
+            {"name": "Rare Items", "rarity": "Rare", "color": 0x3498db},
+            {"name": "Epic Items", "rarity": "Epic", "color": 0x9b59b6},
+            {"name": "Legendary Items", "rarity": "Legendary", "color": 0xf1c40f}
         ]
 
-        # On envoie un embed par catégorie
         for cat in categories:
             items_in_cat = [i for i in SHOP_ITEMS if i.rarity == cat["rarity"]]
-            
-            if not items_in_cat:
-                continue
+            if not items_in_cat: continue
 
             embed = discord.Embed(title=f"--- {cat['name']} ---", color=cat["color"])
-            
-            # On met l'image du premier objet comme "logo" de la catégorie
             if items_in_cat:
                 embed.set_thumbnail(url=items_in_cat[0].image_url)
 
@@ -115,19 +114,17 @@ class Collection(commands.Cog):
                 description_text += f"**{item.name}** • `{item.price} $`\n*{item.description}*\n\n"
             
             embed.description = description_text
-            
-            # On utilise channel.send car on a déjà utilisé interaction.response
             await interaction.channel.send(embed=embed)
 
-    # --- NOUVELLE COMMANDE INSPECT ---
+    # --- INSPECT AVEC AUTOCOMPLÉTION ---
     @app_commands.command(name="inspect", description="See details and image of a specific item")
+    @app_commands.autocomplete(item_name=item_autocomplete) # Lien avec la fonction d'autocomplétion
     async def inspect(self, interaction: discord.Interaction, item_name: str):
         found_item = next((i for i in SHOP_ITEMS if i.name.lower() == item_name.lower()), None)
         
         if not found_item:
-            return await interaction.response.send_message("❌ Item not found.", ephemeral=True)
+            return await interaction.response.send_message("❌ Item not found. Please select from the list.", ephemeral=True)
 
-        # Couleur dynamique selon la rareté
         color = 0x95a5a6
         if found_item.rarity == "Rare": color = 0x3498db
         elif found_item.rarity == "Epic": color = 0x9b59b6
@@ -136,12 +133,12 @@ class Collection(commands.Cog):
         embed = discord.Embed(title=f"🔍 {found_item.name}", description=found_item.description, color=color)
         embed.add_field(name="Price", value=f"{found_item.price} coins", inline=True)
         embed.add_field(name="Rarity", value=found_item.rarity, inline=True)
-        # C'est ici qu'on affiche la GRANDE image
         embed.set_image(url=found_item.image_url)
         
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="buy", description="Manually buy an item")
+    @app_commands.autocomplete(item_name=item_autocomplete) # Autocomplétion aussi pour Buy !
     async def buy(self, interaction: discord.Interaction, item_name: str):
         found_item = next((i for i in SHOP_ITEMS if i.name.lower() == item_name.lower()), None)
         if not found_item:
