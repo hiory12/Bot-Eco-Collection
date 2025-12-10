@@ -1,8 +1,15 @@
 {
     "537327082477322243": {
-        "money": 190,
+        "money": 165,
         "inventory": [
-            "Wooden_Sword"
+            "Wooden_Sword",
+            "Stick"
+        ]
+    },
+    "320877930932731905": {
+        "money": 94,
+        "inventory": [
+            "Stick"
         ]
     }
 }

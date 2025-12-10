@@ -6,25 +6,39 @@ class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # Voici la commande SLASH (elle utilise app_commands au lieu de commands)
-    @app_commands.command(name="aide", description="Affiche le guide des commandes du bot")
-    async def aide(self, interaction: discord.Interaction):
+    # SLASH COMMAND (app_commands)
+    @app_commands.command(name="help", description="Displays the player guide and commands")
+    async def help(self, interaction: discord.Interaction):
         
-        # [Barème: UI] On crée un joli panneau (Embed)
+        # [Grading: UI] Clean Embed Panel
         embed = discord.Embed(
-            title="📘 Guide du Joueur",
-            description="Bienvenue ! Voici comment utiliser le système d'économie et de collection.",
+            title="📘 Player Guide",
+            description="Welcome! Here is how to use the Economy and Collection system.",
             color=discord.Color.blue()
         )
         
-        # On ajoute les champs pour expliquer les commandes "!"
-        embed.add_field(name="💰 Économie", value="`!work` : Travailler pour gagner de l'argent\n`!solde` : Voir combien tu as en banque", inline=False)
-        embed.add_field(name="🛒 Commerce", value="`!shop` : Voir les objets à vendre\n`!buy <objet>` : Acheter un objet (ex: `!buy Potion`)", inline=False)
-        embed.add_field(name="🎒 Collection", value="`!inventaire` : Voir tes objets possédés", inline=False)
+        # Updated commands in English
+        embed.add_field(
+            name="💰 Economy", 
+            value="`!work` : Work to earn coins\n`!balance` : Check your wallet balance", 
+            inline=False
+        )
         
-        embed.set_footer(text="Projet B2 - Économie des objets")
+        embed.add_field(
+            name="🛒 Market", 
+            value="`!shop` : Open the interactive shop menu\n`!buy <item>` : Manually buy an item (e.g., `!buy Apple`)", 
+            inline=False
+        )
+        
+        embed.add_field(
+            name="🎒 Collection", 
+            value="`!inventory` : View your collected items", 
+            inline=False
+        )
+        
+        embed.set_footer(text="B2 Project - Object Economy")
 
-        # Pour les slash commands, on utilise interaction.response.send_message
+        # Reply to the interaction
         await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
