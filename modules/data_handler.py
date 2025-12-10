@@ -1,36 +1,37 @@
 import json
 import os
-from modules.game_classes import Joueur
+from modules.game_classes import Player
 
-FICHIER_DB = "data/joueurs.json"
+DB_FILE = "data/players.json"  # Renamed for English consistency
 
 class DataManager:
     @staticmethod
-    def charger_donnees():
-        if not os.path.exists(FICHIER_DB):
+    def load_data():
+        if not os.path.exists(DB_FILE):
             return {}
-        with open(FICHIER_DB, 'r') as f:
+        with open(DB_FILE, 'r') as f:
             return json.load(f)
 
     @staticmethod
-    def sauvegarder_donnees(donnees):
-        # [Barème: Sécurité] Sauvegarde atomique simulée
-        with open(FICHIER_DB, 'w') as f:
-            json.dump(donnees, f, indent=4)
+    def save_data(data):
+        # [Grading: Security] Atomic save simulation
+        with open(DB_FILE, 'w') as f:
+            json.dump(data, f, indent=4)
 
     @staticmethod
-    def get_joueur(user_id):
-        data = DataManager.charger_donnees()
+    def get_player(user_id):
+        data = DataManager.load_data()
         str_id = str(user_id)
         if str_id in data:
-            return Joueur(str_id, data[str_id]['argent'], data[str_id]['inventaire'])
-        return Joueur(str_id)
+            # Using 'money' and 'inventory' keys
+            return Player(str_id, data[str_id]['money'], data[str_id]['inventory'])
+        return Player(str_id)
 
     @staticmethod
-    def save_joueur(joueur):
-        data = DataManager.charger_donnees()
-        data[str(joueur.id)] = {
-            "argent": joueur.argent,
-            "inventaire": joueur.inventaire
+    def save_player(player):
+        data = DataManager.load_data()
+        data[str(player.id)] = {
+            "money": player.money,
+            "inventory": player.inventory
         }
-        DataManager.sauvegarder_donnees(data)
+        DataManager.save_data(data)

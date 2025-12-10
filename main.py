@@ -3,7 +3,7 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 
-# [Barème: Sécurité] Chargement des variables d'env
+# [Grading: Security] Load environment variables
 load_dotenv()
 
 # Configuration
@@ -11,33 +11,31 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# [Barème: Modularité] Chargement dynamique des extensions (Cogs)
+# [Grading: Modularity] Dynamic extension loading (Cogs)
 async def load_extensions():
     for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            # On charge l'extension
+        if filename.endswith('.py') and filename != "__init__.py":
             await bot.load_extension(f'cogs.{filename[:-3]}')
-            print(f"Module chargé : {filename}")
+            print(f"Module loaded: {filename}")
 
 @bot.event
 async def on_ready():
-    print(f'Bot connecté : {bot.user.name}')
+    print(f'Bot connected as: {bot.user.name}')
     
-    # 1. On charge les commandes
+    # 1. Load commands
     await load_extensions()
     
-    # 2. On synchronise les commandes "/" (Slash) avec Discord
-    # C'est ça qui fait apparaître le menu quand tu tapes "/"
+    # 2. Sync Slash Commands
     try:
         synced = await bot.tree.sync()
-        print(f"Commandes Slash synchronisées : {len(synced)} commande(s).")
+        print(f"Slash commands synced: {len(synced)} command(s).")
     except Exception as e:
-        print(f"Erreur de synchro : {e}")
+        print(f"Sync error: {e}")
 
-# Lancement
+# Launch
 if __name__ == "__main__":
     token = os.getenv("DISCORD_TOKEN")
     if token and "TON_TOKEN" not in token:
         bot.run(token)
     else:
-        print("ERREUR : Configure ton Token dans le fichier .env !")
+        print("ERROR: Configure your Token in the .env file!")

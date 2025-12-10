@@ -1,88 +1,87 @@
 import discord
 from discord.ext import commands
 from discord.ui import Select, View
-from modules.game_classes import Objet
+from modules.game_classes import Item
 from modules.data_handler import DataManager
 
-# [Barème: Complexité] Liste complète des objets
-BOUTIQUE = [
-    # --- Niveau 1 : Objets Communs ---
-    Objet("Pomme", 5, "Commune"),
-    Objet("Pain", 10, "Commune"),
-    Objet("Bandage", 15, "Commune"),
-    Objet("Baton", 25, "Commune"),
-    Objet("Epee_Bois", 50, "Commune"),
+# [Grading: Complexity] Full list of items in English
+SHOP_ITEMS = [
+    # --- Level 1 : Common Items ---
+    Item("Apple", 5, "Common"),
+    Item("Bread", 10, "Common"),
+    Item("Bandage", 15, "Common"),
+    Item("Stick", 25, "Common"),
+    Item("Wooden_Sword", 50, "Common"),
 
-    # --- Niveau 2 : Objets Rares ---
-    Objet("Potion_Mana", 100, "Rare"),
-    Objet("Bouclier_Fer", 150, "Rare"),
-    Objet("Carte_Tresor", 250, "Rare"),
-    Objet("Arc_Elfique", 400, "Rare"),
-    Objet("Diamant", 500, "Rare"),
+    # --- Level 2 : Rare Items ---
+    Item("Mana_Potion", 100, "Rare"),
+    Item("Iron_Shield", 150, "Rare"),
+    Item("Treasure_Map", 250, "Rare"),
+    Item("Elven_Bow", 400, "Rare"),
+    Item("Diamond", 500, "Rare"),
 
-    # --- Niveau 3 : Objets Épiques ---
-    Objet("Grimoire", 800, "Épique"),
-    Objet("Armure_Or", 1500, "Épique"),
-    Objet("Anneau_Rubis", 2500, "Épique"),
+    # --- Level 3 : Epic Items ---
+    Item("Grimoire", 800, "Epic"),
+    Item("Gold_Armor", 1500, "Epic"),
+    Item("Ruby_Ring", 2500, "Epic"),
 
-    # --- Niveau 4 : Objets Légendaires ---
-    Objet("Couronne_Roi", 5000, "Légendaire"),
-    Objet("Epee_Excalibur", 7500, "Légendaire"),
-    Objet("Oeuf_Dragon", 15000, "Légendaire")
+    # --- Level 4 : Legendary Items ---
+    Item("King_Crown", 5000, "Legendary"),
+    Item("Excalibur", 7500, "Legendary"),
+    Item("Dragon_Egg", 15000, "Legendary")
 ]
 
-# --- CLASSES D'INTERFACE (UI) ---
+# --- UI CLASSES ---
 
 class ShopSelect(Select):
-    """Le menu déroulant qui contient TOUS les objets"""
+    """The dropdown menu containing ALL items"""
     def __init__(self):
         options = []
-        for objet in BOUTIQUE:
-            # Gestion des Emojis selon la rareté
+        for item in SHOP_ITEMS:
+            # Emoji management based on rarity
             emoji = "⚪"
-            description_text = f"{objet.prix} $ - Commun"
+            description_text = f"{item.price} coins - Common"
             
-            if objet.rarete == "Rare": 
+            if item.rarity == "Rare": 
                 emoji = "🔵"
-                description_text = f"{objet.prix} $ - Rare"
-            elif objet.rarete == "Épique": 
+                description_text = f"{item.price} coins - Rare"
+            elif item.rarity == "Epic": 
                 emoji = "🟣"
-                description_text = f"{objet.prix} $ - Épique"
-            elif objet.rarete == "Légendaire": 
+                description_text = f"{item.price} coins - Epic"
+            elif item.rarity == "Legendary": 
                 emoji = "🟠"
-                description_text = f"{objet.prix} $ - Légendaire"
+                description_text = f"{item.price} coins - Legendary"
             
-            # Création de l'option dans le menu
+            # Create the menu option
             options.append(discord.SelectOption(
-                label=objet.nom, 
+                label=item.name, 
                 description=description_text, 
                 emoji=emoji,
-                value=objet.nom
+                value=item.name
             ))
 
-        # Placeholder = Le texte affiché avant de cliquer
-        super().__init__(placeholder="🔻 Clique ici pour voir les objets...", min_values=1, max_values=1, options=options)
+        super().__init__(placeholder="🔻 Click here to browse items...", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        """Action au clic"""
-        nom_objet_choisi = self.values[0]
-        objet_trouve = next((o for o in BOUTIQUE if o.nom == nom_objet_choisi), None)
+        """Action on click"""
+        chosen_item_name = self.values[0]
+        found_item = next((i for i in SHOP_ITEMS if i.name == chosen_item_name), None)
         
-        joueur = DataManager.get_joueur(interaction.user.id)
+        player = DataManager.get_player(interaction.user.id)
         
-        # Logique d'achat
-        succes = joueur.acheter(objet_trouve)
+        # Buying logic
+        success = player.buy(found_item)
         
-        if succes:
-            DataManager.save_joueur(joueur)
-            # Message invisible (ephemeral)
+        if success:
+            DataManager.save_player(player)
+            # Ephemeral message (invisible to others)
             await interaction.response.send_message(
-                f"✅ **Achat réussi !** Tu as reçu : {objet_trouve.nom}", 
+                f"✅ **Purchase Successful!** You received: {found_item.name}", 
                 ephemeral=True
             )
         else:
             await interaction.response.send_message(
-                f"❌ **Fonds insuffisants.** Prix : {objet_trouve.prix} pièces.", 
+                f"❌ **Insufficient Funds.** Price: {found_item.price} coins.", 
                 ephemeral=True
             )
 
@@ -91,7 +90,7 @@ class ShopView(View):
         super().__init__()
         self.add_item(ShopSelect())
 
-# --- MODULE COLLECTION ---
+# --- COLLECTION MODULE ---
 
 class Collection(commands.Cog):
     def __init__(self, bot):
@@ -99,32 +98,30 @@ class Collection(commands.Cog):
 
     @commands.command()
     async def shop(self, ctx):
-        """Affiche la boutique (Menu uniquement, pas de liste texte)"""
+        """Displays the interactive shop"""
         
-        # On crée un Embed très simple et propre
         embed = discord.Embed(
-            title="🛒 La Boutique", 
-            description="Bienvenue au marché ! Utilise le menu ci-dessous pour parcourir le catalogue et faire tes achats.", 
+            title="🛒 The Item Shop", 
+            description="Welcome to the market! Use the menu below to browse the catalog and make purchases.", 
             color=discord.Color.gold()
         )
         
-        # On envoie l'embed ET la vue (le menu déroulant)
         await ctx.send(embed=embed, view=ShopView())
 
-    @commands.command()
-    async def inventaire(self, ctx):
-        joueur = DataManager.get_joueur(ctx.author.id)
+    @commands.command(name="inventory", aliases=["inv", "bag"])
+    async def inventory(self, ctx):
+        player = DataManager.get_player(ctx.author.id)
         
-        if not joueur.inventaire:
-            return await ctx.send(embed=discord.Embed(description="🎒 Ton sac est vide.", color=discord.Color.red()))
+        if not player.inventory:
+            return await ctx.send(embed=discord.Embed(description="🎒 Your bag is empty.", color=discord.Color.red()))
         
-        # Affichage propre de l'inventaire
-        comptage = {obj: joueur.inventaire.count(obj) for obj in set(joueur.inventaire)}
-        texte = ""
-        for obj, qte in comptage.items():
-            texte += f"• **{obj}** `x{qte}`\n"
+        # Clean inventory display
+        count = {item: player.inventory.count(item) for item in set(player.inventory)}
+        text = ""
+        for item, qty in count.items():
+            text += f"• **{item}** `x{qty}`\n"
             
-        embed = discord.Embed(title=f"🎒 Sac de {ctx.author.name}", description=texte, color=discord.Color.blue())
+        embed = discord.Embed(title=f"🎒 {ctx.author.name}'s Inventory", description=text, color=discord.Color.blue())
         await ctx.send(embed=embed)
 
 async def setup(bot):

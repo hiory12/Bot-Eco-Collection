@@ -8,34 +8,34 @@ class Economy(commands.Cog):
         self.bot = bot
 
     def create_embed(self, title, description, color):
-        """Fonction utilitaire pour créer des embeds uniformes"""
+        """Utility function to create uniform embeds"""
         embed = discord.Embed(title=title, description=description, color=color)
-        embed.set_footer(text="Système Économique B2")
+        embed.set_footer(text="B2 Economic System")
         return embed
 
     @commands.command()
     async def work(self, ctx):
-        joueur = DataManager.get_joueur(ctx.author.id)
+        player = DataManager.get_player(ctx.author.id)
         
-        # Calcul du gain
-        gain = random.randint(10, 100)
-        joueur.argent += gain
-        DataManager.save_joueur(joueur)
+        # Calculate earnings
+        earnings = random.randint(10, 100)
+        player.money += earnings
+        DataManager.save_player(player)
         
-        # [UI Pro] Utilisation d'un Embed vert (Succès) avec mise en forme
-        embed = self.create_embed("🔨 Travail Terminé", f"Tu as travaillé dur aujourd'hui !", discord.Color.green())
-        embed.add_field(name="💰 Gain", value=f"**+{gain}** pièces", inline=True)
-        embed.add_field(name="🏦 Solde Actuel", value=f"**{joueur.argent}** pièces", inline=True)
+        # [Pro UI] Green Embed (Success)
+        embed = self.create_embed("🔨 Work Complete", f"You worked hard today!", discord.Color.green())
+        embed.add_field(name="💰 Earnings", value=f"**+{earnings}** coins", inline=True)
+        embed.add_field(name="🏦 Current Balance", value=f"**{player.money}** coins", inline=True)
         
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def solde(self, ctx):
-        joueur = DataManager.get_joueur(ctx.author.id)
+    @commands.command(name="balance", aliases=["solde"]) # 'aliases' allows !solde to still work
+    async def balance(self, ctx):
+        player = DataManager.get_player(ctx.author.id)
         
-        # [UI Pro] Embed style "Carte Bancaire"
-        embed = self.create_embed(f"💳 Portefeuille de {ctx.author.name}", "", discord.Color.gold())
-        embed.add_field(name="Solde disponible", value=f"# **{joueur.argent}** 🪙", inline=False)
+        # [Pro UI] "Credit Card" style Embed
+        embed = self.create_embed(f"💳 Wallet of {ctx.author.name}", "", discord.Color.gold())
+        embed.add_field(name="Available Balance", value=f"# **{player.money}** 🪙", inline=False)
         embed.set_thumbnail(url=ctx.author.avatar.url if ctx.author.avatar else None)
         
         await ctx.send(embed=embed)

@@ -1,21 +1,21 @@
-class Objet:
-    def __init__(self, nom, prix, rarete):
-        self.nom = nom
-        self.prix = prix
-        self.rarete = rarete  # [Barème: Complexité] Ajout de rareté
+class Item:
+    def __init__(self, name, price, rarity):
+        self.name = name
+        self.price = price
+        self.rarity = rarity  # [Grading: Complexity] Added rarity levels
 
     def to_dict(self):
-        return {"nom": self.nom, "prix": self.prix, "rarete": self.rarete}
+        return {"name": self.name, "price": self.price, "rarity": self.rarity}
 
-class Joueur:
-    def __init__(self, id_discord, argent=0, inventaire=None):
-        self.id = id_discord
-        self.argent = argent
-        self.inventaire = inventaire if inventaire else []
+class Player:
+    def __init__(self, discord_id, money=0, inventory=None):
+        self.id = discord_id
+        self.money = money
+        self.inventory = inventory if inventory else []
 
-    def acheter(self, objet):
-        if self.argent >= objet.prix:
-            self.argent -= objet.prix
-            self.inventaire.append(objet.nom)
+    def buy(self, item):
+        if self.money >= item.price:
+            self.money -= item.price
+            self.inventory.append(item.name)
             return True
         return False
