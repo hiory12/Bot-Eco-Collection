@@ -6,39 +6,37 @@ class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # SLASH COMMAND (app_commands)
-    @app_commands.command(name="help", description="Displays the player guide and commands")
+    @app_commands.command(name="help", description="Displays the player guide")
     async def help(self, interaction: discord.Interaction):
-        
-        # [Grading: UI] Clean Embed Panel
         embed = discord.Embed(
             title="📘 Player Guide",
-            description="Welcome! Here is how to use the Economy and Collection system.",
+            description="Welcome! Use the **Slash Commands** (`/`) to interact.",
             color=discord.Color.blue()
         )
         
-        # Updated commands in English
         embed.add_field(
             name="💰 Economy", 
-            value="`!work` : Work to earn coins\n`!balance` : Check your wallet balance", 
+            value="`/work` : Earn coins\n`/balance` : Check wallet", 
             inline=False
         )
         
         embed.add_field(
             name="🛒 Market", 
-            value="`!shop` : Open the interactive shop menu\n`!buy <item>` : Manually buy an item (e.g., `!buy Apple`)", 
+            value=(
+                "`/shop` : Open interactive menu\n"
+                "`/catalog` : View price list\n"
+                "`/buy [item]` : Buy specific item"
+            ), 
             inline=False
         )
         
         embed.add_field(
             name="🎒 Collection", 
-            value="`!inventory` : View your collected items", 
+            value="`/inventory` : View your bag", 
             inline=False
         )
         
-        embed.set_footer(text="B2 Project - Object Economy")
-
-        # Reply to the interaction
+        embed.set_footer(text="B2 Project - Full Slash Commands")
         await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
