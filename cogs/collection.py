@@ -97,29 +97,55 @@ class Collection(commands.Cog):
 
     @commands.command()
     async def shop(self, ctx):
-        """Displays the interactive shop"""
+        """Displays the interactive shop menu"""
         embed = discord.Embed(
             title="🛒 The Item Shop", 
-            description="Welcome to the market! Use the menu below OR type `!buy ItemName`.", 
+            description="Welcome to the market! Use the menu below to buy instantly, or type `!buy ItemName`.", 
             color=discord.Color.gold()
         )
         await ctx.send(embed=embed, view=ShopView())
 
-    # --- J'ai rajouté la commande BUY ici ---
+    # --- NOUVELLE COMMANDE CATALOGUE VISUEL ---
+    @commands.command()
+    async def catalog(self, ctx):
+        """Displays a clean visual list of all items and prices"""
+        
+        embed = discord.Embed(
+            title="📜 Full Item Catalog",
+            description="Here is the complete price list grouped by rarity.",
+            color=discord.Color.gold()
+        )
+
+        # Emoji map for clean display
+        emoji_map = {"Common": "⚪", "Rare": "🔵", "Epic": "🟣", "Legendary": "🟠"}
+
+        # Group items by rarity automatically
+        grouped_items = {"Common": [], "Rare": [], "Epic": [], "Legendary": []}
+        for item in SHOP_ITEMS:
+            grouped_items[item.rarity].append(item)
+
+        # Create a field for each rarity group
+        for rarity, items in grouped_items.items():
+            if not items: continue # Skip empty categories
+            
+            field_text = ""
+            for item in items:
+                field_text += f"{emoji_map[rarity]} **{item.name}** : `{item.price} coins`\n"
+            
+            embed.add_field(name=f"--- {rarity} Items ---", value=field_text, inline=False)
+
+        embed.set_footer(text="Use !buy <name> to purchase items.")
+        await ctx.send(embed=embed)
+
     @commands.command()
     async def buy(self, ctx, *, item_name: str):
         """Manually buy an item (ex: !buy Apple)"""
-        
-        # Search for the item (case insensitive)
         found_item = next((i for i in SHOP_ITEMS if i.name.lower() == item_name.lower()), None)
         
         if not found_item:
-            # Suggest close matches or show error
             return await ctx.send(f"❌ Item **{item_name}** not found in the shop.")
 
         player = DataManager.get_player(ctx.author.id)
-        
-        # Buying logic
         success = player.buy(found_item)
         
         if success:
@@ -135,7 +161,6 @@ class Collection(commands.Cog):
         if not player.inventory:
             return await ctx.send(embed=discord.Embed(description="🎒 Your bag is empty.", color=discord.Color.red()))
         
-        # Clean inventory display
         count = {item: player.inventory.count(item) for item in set(player.inventory)}
         text = ""
         for item, qty in count.items():
