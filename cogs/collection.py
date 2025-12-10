@@ -63,7 +63,7 @@ class ShopSelect(Select):
         super().__init__(placeholder="🔻 Click here to browse items...", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        """Action on click"""
+        """Action on click (Menu)"""
         chosen_item_name = self.values[0]
         found_item = next((i for i in SHOP_ITEMS if i.name == chosen_item_name), None)
         
@@ -74,7 +74,6 @@ class ShopSelect(Select):
         
         if success:
             DataManager.save_player(player)
-            # Ephemeral message (invisible to others)
             await interaction.response.send_message(
                 f"✅ **Purchase Successful!** You received: {found_item.name}", 
                 ephemeral=True
@@ -99,14 +98,35 @@ class Collection(commands.Cog):
     @commands.command()
     async def shop(self, ctx):
         """Displays the interactive shop"""
-        
         embed = discord.Embed(
             title="🛒 The Item Shop", 
-            description="Welcome to the market! Use the menu below to browse the catalog and make purchases.", 
+            description="Welcome to the market! Use the menu below OR type `!buy ItemName`.", 
             color=discord.Color.gold()
         )
-        
         await ctx.send(embed=embed, view=ShopView())
+
+    # --- J'ai rajouté la commande BUY ici ---
+    @commands.command()
+    async def buy(self, ctx, *, item_name: str):
+        """Manually buy an item (ex: !buy Apple)"""
+        
+        # Search for the item (case insensitive)
+        found_item = next((i for i in SHOP_ITEMS if i.name.lower() == item_name.lower()), None)
+        
+        if not found_item:
+            # Suggest close matches or show error
+            return await ctx.send(f"❌ Item **{item_name}** not found in the shop.")
+
+        player = DataManager.get_player(ctx.author.id)
+        
+        # Buying logic
+        success = player.buy(found_item)
+        
+        if success:
+            DataManager.save_player(player)
+            await ctx.send(f"✅ **Purchase Successful!** You bought **{found_item.name}** for {found_item.price} coins.")
+        else:
+            await ctx.send(f"❌ **Insufficient Funds.** You need {found_item.price} coins (You have: {player.money}).")
 
     @commands.command(name="inventory", aliases=["inv", "bag"])
     async def inventory(self, ctx):
