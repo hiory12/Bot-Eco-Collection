@@ -14,29 +14,16 @@ class General(commands.Cog):
             color=discord.Color.blue()
         )
         
-        embed.add_field(
-            name="💰 Economy", 
-            value="`/work` : Earn coins\n`/balance` : Check wallet", 
-            inline=False
-        )
+        embed.add_field(name="💰 Economy", value="`/work`\n`/balance`", inline=True)
         
         embed.add_field(
             name="🛒 Market", 
-            value=(
-                "`/shop` : Open interactive menu\n"
-                "`/catalog` : View price list\n"
-                "`/buy [item]` : Buy specific item"
-            ), 
+            value="`/shop` (Menu)\n`/catalog` (Visual List)\n`/inspect [item]` (Image)\n`/buy [item]`", 
             inline=False
         )
         
-        embed.add_field(
-            name="🎒 Collection", 
-            value="`/inventory` : View your bag", 
-            inline=False
-        )
+        embed.add_field(name="🎒 Collection", value="`/inventory`", inline=False)
         
-        embed.set_footer(text="B2 Project - Full Slash Commands")
         await interaction.response.send_message(embed=embed)
 
 async def setup(bot):

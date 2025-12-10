@@ -1,11 +1,19 @@
 class Item:
-    def __init__(self, name, price, rarity):
+    def __init__(self, name, price, rarity, description, image_url):
         self.name = name
         self.price = price
-        self.rarity = rarity  # [Grading: Complexity] Added rarity levels
+        self.rarity = rarity
+        self.description = description
+        self.image_url = image_url
 
     def to_dict(self):
-        return {"name": self.name, "price": self.price, "rarity": self.rarity}
+        return {
+            "name": self.name, 
+            "price": self.price, 
+            "rarity": self.rarity,
+            "description": self.description,
+            "image_url": self.image_url
+        }
 
 class Player:
     def __init__(self, discord_id, money=0, inventory=None):
